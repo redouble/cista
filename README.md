@@ -270,11 +270,11 @@ If you find this project helpful, please consider sponsoring its development.
 ### PayPal
 
 <p>
-  <a href="https://paypal.me/redouble" target="_blank">
+  <a href="https://paypal.me/redouble117" target="_blank">
     <img src="https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white" alt="PayPal" />
   </a>
 </p>
-<!--- 将 paypal.me/ 后面的链接改为你的 PayPal 用户名 --->
+
 
 ### GitHub Sponsors
 
@@ -283,7 +283,6 @@ If you find this project helpful, please consider sponsoring its development.
     <img src="https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#white" alt="GitHub Sponsors" />
   </a>
 </p>
-<!--- 需要在 GitHub 上开通 Sponsors 后此链接才生效 --->
 
 **感谢所有支持者！** 每一份捐赠都会用于项目的持续开发和维护。
 
