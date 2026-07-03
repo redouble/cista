@@ -276,17 +276,9 @@ If you find this project helpful, please consider sponsoring its development.
 </p>
 
 
-### GitHub Sponsors
+**感谢所有支持者！** 🙏
 
-<p>
-  <a href="https://github.com/sponsors/redouble" target="_blank">
-    <img src="https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#white" alt="GitHub Sponsors" />
-  </a>
-</p>
-
-**感谢所有支持者！** 每一份捐赠都会用于项目的持续开发和维护。
-
-**Thank you to all supporters!** Every donation helps with ongoing development and maintenance.
+**Thank you to all supporters!** 🙏
 
 ---
 
