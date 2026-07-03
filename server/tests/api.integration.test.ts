@@ -40,7 +40,9 @@ beforeAll(async () => {
   await initDb();
   await runMigrations();
 
-  // Seed admin user
+  // ⚠️ DEV-ONLY: Seed admin user for local development/testing.
+  // Default credentials: admin@cista.local / Admin123!
+  // CHANGE these via ADMIN_EMAIL / ADMIN_PASSWORD env vars in production.
   const existingAdmin = dbGet('SELECT id FROM users WHERE email = ?', ['admin@cista.local']);
   if (!existingAdmin) {
     const now = new Date().toISOString();
@@ -121,7 +123,9 @@ describe('Auth API', () => {
     bobCookies = res.headers['set-cookie'] || [];
   });
 
-  it('should login admin', async () => {
+  it('should login admin (dev-only credentials)', async () => {
+    // ⚠️ admin@cista.local / Admin123! is for development/testing only.
+    // Override via ADMIN_EMAIL / ADMIN_PASSWORD environment variables.
     const res = await request(app)
       .post('/api/auth/login')
       .send({ email: 'admin@cista.local', password: 'Admin123!' });

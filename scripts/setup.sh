@@ -55,6 +55,10 @@ cd server
 npx tsx src/db/migrate.ts
 cd ..
 
+# ⚠️  Default admin credentials (admin@cista.local / Admin123!) are for
+#    development and testing only. CHANGE them before any production use
+#    by setting ADMIN_EMAIL and ADMIN_PASSWORD environment variables.
+
 # Seed admin user
 echo ""
 echo "👤 Seeding admin user..."
@@ -73,7 +77,7 @@ echo "   Or start individually:"
 echo "     npm run dev:server   # Backend on http://localhost:3000"
 echo "     npm run dev:client   # Frontend on http://localhost:5173"
 echo ""
-echo "   Default admin credentials:"
+echo "   Default admin credentials (dev-only — change in production):"
 echo "     Email:    admin@cista.local"
 echo "     Password: Admin123!"
 echo "=========================================="

@@ -4,6 +4,8 @@
 
 Cista is an open-source, self-hosted web application for secure end-to-end encrypted file sharing. Files are encrypted in your browser **before** upload — the server never sees your plaintext data.
 
+> **No terminal, no OpenSSL, no technical skills required. If you can use a website, you can use Cista.**
+
 > **License:** Business Source License 1.1 — see [📄 License](#-license) below for details.
 
 ---
@@ -254,7 +256,7 @@ Copyright © 2026 Cista Contributors
 
 **Additional Use Grant:** You may use the Licensed Work in development, testing, and personal non-production environments. For production deployments exceeding reasonable limits, please contact the author for commercial licensing.
 
-**Change Date:** 4 years from the release date of each version.
+**Change Date:** 4 years from the release date of each version (e.g., versions released July 2026 change to Apache 2.0 in July 2030).
 
 **Change License:** Apache License 2.0
 

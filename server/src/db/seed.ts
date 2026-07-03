@@ -7,6 +7,7 @@ async function seed() {
   await initDb();
 
   // Create admin user if not exists
+  // ⚠️ DEV-ONLY: Default admin credentials. CHANGE before production use.
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@cista.local';
   const adminPassword = process.env.ADMIN_PASSWORD || 'Admin123!';
 
