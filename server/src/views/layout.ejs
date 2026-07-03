@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="<%= locale %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= t('app.name') %> - <%= t('app.tagline') %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+    .progress-bar { transition: width 0.3s ease; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <% if (user) { %>
+  <!-- Navigation -->
+  <nav class="bg-white shadow-sm border-b" x-data="{ mobileOpen: false }">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <a href="/dashboard" class="flex items-center gap-2">
+            <span class="text-2xl">📦</span>
+            <span class="font-bold text-xl text-gray-900"><%= t('app.name') %></span>
+          </a>
+          <div class="hidden md:flex ml-10 space-x-4">
+            <a href="/files" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50"><%= t('nav.files') %></a>
+            <a href="/files/upload" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50"><%= t('nav.upload') %></a>
+            <a href="/shares" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50"><%= t('nav.share') %></a>
+            <% if (user.role === 'admin') { %>
+            <a href="/admin" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50"><%= t('nav.admin') %></a>
+            <% } %>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <!-- Language Switcher -->
+          <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" class="text-sm text-gray-600 hover:text-blue-600 px-2 py-1 rounded">
+              <%= locale === 'zh' ? '中文' : 'English' %>
+            </button>
+            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 w-28 bg-white border rounded shadow-lg z-10">
+              <button onclick="switchLocale('zh')" class="block w-full text-left px-4 py-2 text-sm hover:bg-blue-50 <%= locale === 'zh' ? 'font-bold' : '' %>">中文</button>
+              <button onclick="switchLocale('en')" class="block w-full text-left px-4 py-2 text-sm hover:bg-blue-50 <%= locale === 'en' ? 'font-bold' : '' %>">English</button>
+            </div>
+          </div>
+          <a href="/profile" class="text-sm text-gray-700 hover:text-blue-600 px-3 py-2">
+            <%= user.email %>
+          </a>
+          <button onclick="logout()" class="text-sm text-red-600 hover:text-red-800 px-3 py-2">
+            <%= t('nav.logout') %>
+          </button>
+          <!-- Mobile menu button -->
+          <button @click="mobileOpen = !mobileOpen" class="md:hidden p-2 rounded text-gray-600 hover:bg-gray-100">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <!-- Mobile menu -->
+      <div x-show="mobileOpen" class="md:hidden pb-3">
+        <a href="/files" class="block px-3 py-2 text-sm text-gray-700 hover:bg-blue-50"><%= t('nav.files') %></a>
+        <a href="/files/upload" class="block px-3 py-2 text-sm text-gray-700 hover:bg-blue-50"><%= t('nav.upload') %></a>
+        <a href="/shares" class="block px-3 py-2 text-sm text-gray-700 hover:bg-blue-50"><%= t('nav.share') %></a>
+        <% if (user.role === 'admin') { %>
+        <a href="/admin" class="block px-3 py-2 text-sm text-gray-700 hover:bg-blue-50"><%= t('nav.admin') %></a>
+        <% } %>
+      </div>
+    </div>
+  </nav>
+  <% } %>
+
+  <!-- Page Content -->
+  <main class="flex-1">
+    <%- body %>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t mt-auto py-4">
+    <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
+      <p><%= t('app.name') %> &copy; 2024 - <span class="font-mono"><%= appVersion %></span></p>
+      <p class="mt-1 text-xs text-gray-400"><%= t('app.version') %> <%= appVersion %> &middot; <%= t('app.open_source') %></p>
+    </div>
+  </footer>
+
+  <!-- Toast Notifications -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2" x-data="{ toasts: [] }">
+    <template x-for="(toast, i) in toasts" :key="i">
+      <div class="px-4 py-3 rounded-lg shadow-lg text-white text-sm max-w-sm transition-all duration-300"
+           :class="{
+             'bg-green-600': toast.type === 'success',
+             'bg-red-600': toast.type === 'error',
+             'bg-blue-600': toast.type === 'info',
+             'bg-yellow-600': toast.type === 'warning'
+           }"
+           x-text="toast.message"
+           @click="toasts.splice(i, 1)">
+      </div>
+    </template>
+  </div>
+
+  <script>
+    function switchLocale(locale) {
+      fetch('/api/locale', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locale })
+      }).then(() => location.reload());
+    }
+
+    function logout() {
+      fetch('/api/auth/logout', { method: 'POST' })
+        .then(() => { window.location.href = '/'; });
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target;
+        const orig = btn.textContent;
+        btn.textContent = '<%= t('common.copied').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>';
+        setTimeout(() => { btn.textContent = orig; }, 2000);
+      });
+    }
+
+    // Global toast notification helpers
+    function showToast(message, type) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = 'px-4 py-3 rounded-lg shadow-lg text-white text-sm max-w-sm transition-all duration-300';
+      const bgColors = { success: 'bg-green-600', error: 'bg-red-600', info: 'bg-blue-600', warning: 'bg-yellow-600' };
+      toast.classList.add(bgColors[type] || bgColors.info);
+      toast.textContent = message;
+      toast.addEventListener('click', () => { if (toast.parentNode) toast.remove(); });
+      container.appendChild(toast);
+      setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4000);
+    }
+
+    function showError(msg) { showToast(msg, 'error'); }
+    function showSuccess(msg) { showToast(msg, 'success'); }
+    function showInfo(msg) { showToast(msg, 'info'); }
+  </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "cista",
+  "version": "0.1.0-alpha",
+  "description": "Cista - Zero-knowledge end-to-end encrypted file sharing system",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "start": "cd server && npm start",
+    "test": "cd server && npm test",
+    "db:migrate": "cd server && npm run db:migrate"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,73 @@
+<%- include('partials/header') %>
+
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-900"><%= t('nav.files') %></h1>
+    <a href="/files/upload" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">+ <%= t('nav.upload') %></a>
+  </div>
+
+  <div id="file-list" class="space-y-3">
+    <div class="text-center py-12 text-gray-500"><%= t('common.loading') %></div>
+  </div>
+</div>
+
+<script>
+  async function loadFiles() {
+    try {
+      const res = await fetch('/api/files');
+      const data = await res.json();
+      const container = document.getElementById('file-list');
+
+      if (!data.files || data.files.length === 0) {
+        container.innerHTML = '<div class="text-center py-12 text-gray-500 bg-white border rounded-xl"><div class="text-4xl mb-3">📂</div><p><%= t("file.no_files") %></p><a href="/files/upload" class="text-blue-600 hover:underline mt-2 inline-block"><%= t("file.upload") %></a></div>';
+        return;
+      }
+
+      container.innerHTML = data.files.map(f => `
+        <div class="bg-white border rounded-xl p-4 flex items-center justify-between hover:shadow-sm transition">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="text-2xl">📄</span>
+            <div class="min-w-0">
+              <a href="/files/${f.id}" class="font-medium text-gray-900 hover:text-blue-600 truncate block">${escapeHtml(f.name)}</a>
+              <p class="text-xs text-gray-500">${formatSize(f.size)} · ${new Date(f.createdAt).toLocaleDateString()} · ${f.shareCount || 0} <%= t('share.codes') %></p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="deleteFile('${f.id}')" class="text-red-600 hover:text-red-800 text-sm px-3 py-1 rounded hover:bg-red-50"><%= t('file.delete') %></button>
+          </div>
+        </div>
+      `).join('');
+    } catch (err) {
+      document.getElementById('file-list').innerHTML = '<div class="text-center py-12 text-red-500">Failed to load files</div>';
+    }
+  }
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
+    return (bytes / 1073741824).toFixed(2) + ' GB';
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  async function deleteFile(id) {
+    if (!confirm('<%= t('file.delete_confirm').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>')) return;
+    try {
+      const res = await fetch('/api/files/' + id, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) loadFiles();
+      else showError(data.error);
+    } catch (err) {
+      showError('Delete failed');
+    }
+  }
+
+  loadFiles();
+</script>
+
+<%- include('partials/footer') %>

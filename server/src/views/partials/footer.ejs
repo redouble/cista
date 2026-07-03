@@ -1,0 +1,68 @@
+  </main>
+
+  <!-- Toast Notifications -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2" x-data="{ toasts: [] }">
+    <template x-for="(toast, i) in toasts" :key="i">
+      <div class="px-4 py-3 rounded-lg shadow-lg text-white text-sm max-w-sm transition-all duration-300"
+           :class="{
+             'bg-green-600': toast.type === 'success',
+             'bg-red-600': toast.type === 'error',
+             'bg-blue-600': toast.type === 'info',
+             'bg-yellow-600': toast.type === 'warning'
+           }"
+           x-text="toast.message"
+           @click="toasts.splice(i, 1)">
+      </div>
+    </template>
+  </div>
+
+  <footer class="bg-white border-t mt-auto py-4">
+    <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
+      <p><%= t('app.name') %> &copy; 2026 - <span class="font-mono"><%= appVersion %></span></p>
+      <p class="mt-1 text-xs text-gray-400"><%= t('app.version') %> <%= appVersion %> &middot; <%= t('app.open_source') %></p>
+    </div>
+  </footer>
+
+  <script>
+    function switchLocale(locale) {
+      fetch('/api/locale', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locale })
+      }).then(() => location.reload());
+    }
+
+    function logout() {
+      fetch('/api/auth/logout', { method: 'POST' })
+        .then(() => { window.location.href = '/'; });
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target;
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = orig; }, 2000);
+      });
+    }
+
+    // Global toast notification helpers
+    function showToast(message, type) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = 'px-4 py-3 rounded-lg shadow-lg text-white text-sm max-w-sm transition-all duration-300';
+      const bgColors = { success: 'bg-green-600', error: 'bg-red-600', info: 'bg-blue-600', warning: 'bg-yellow-600' };
+      toast.classList.add(bgColors[type] || bgColors.info);
+      toast.textContent = message;
+      toast.addEventListener('click', () => { if (toast.parentNode) toast.remove(); });
+      container.appendChild(toast);
+      setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4000);
+    }
+
+    function showError(msg) { showToast(msg, 'error'); }
+    function showSuccess(msg) { showToast(msg, 'success'); }
+    function showInfo(msg) { showToast(msg, 'info'); }
+  </script>
+</body>
+</html>

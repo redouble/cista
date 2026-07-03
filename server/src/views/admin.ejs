@@ -1,0 +1,256 @@
+<%- include('partials/header') %>
+
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <h1 class="text-2xl font-bold text-gray-900 mb-8"><%= t('admin.title') %></h1>
+
+  <!-- Tabs -->
+  <div class="flex gap-4 mb-8 border-b pb-2">
+    <button onclick="showTab('users')" class="tab-btn active px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600">👥 <%= t('admin.users') %></button>
+    <button onclick="showTab('config')" class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600">⚙️ <%= t('admin.config') %></button>
+    <button onclick="showTab('stats')" class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600">📊 <%= t('admin.stats') %></button>
+  </div>
+
+  <!-- Users Tab -->
+  <div id="tab-users" class="tab-content">
+    <div id="users-list" class="bg-white rounded-xl shadow-sm border">
+      <div class="text-center py-12 text-gray-500"><%= t('common.loading') %></div>
+    </div>
+  </div>
+
+  <!-- Config Tab -->
+  <div id="tab-config" class="tab-content hidden">
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+      <h2 class="font-bold text-lg mb-6"><%= t('admin.config') %></h2>
+      <div id="config-form" class="space-y-4">
+        <div class="text-center py-8 text-gray-500"><%= t('common.loading') %></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Tab -->
+  <div id="tab-stats" class="tab-content hidden">
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+      <h2 class="font-bold text-lg mb-6"><%= t('admin.stats') %></h2>
+      <div id="stats-content" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="text-center py-8 text-gray-500"><%= t('common.loading') %></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Client-side i18n helper
+  const _t = {
+    'admin.no_users': '<%= t('admin.no_users').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'admin.email': '<%= t('auth.email').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'admin.role': '<%= t('auth.role').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'admin.status': '<%= t('admin.status').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'admin.joined': '<%= t('admin.joined').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'admin.actions': '<%= t('admin.actions').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'admin.active': '<%= t('admin.enable').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'admin.disabled': '<%= t('admin.disable').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'admin.disable': '<%= t('admin.disable').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'admin.enable': '<%= t('admin.enable').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'admin.delete_user': '<%= t('admin.delete_user').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'admin.load_failed': '<%= t('admin.load_failed').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'admin.char_6': '6 <%= t('admin.characters').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'admin.char_8': '8 <%= t('admin.characters').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'admin.config_saved': '<%= t('admin.config_saved').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'admin.delete_user_confirm': '<%= t('admin.delete_user_confirm').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'common.failed': '<%= t('common.failed').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'auth.role_admin': '<%= t('auth.role_admin').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+    'auth.role_user': '<%= t('auth.role_user').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>',
+  };
+  function showTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(el => {
+      el.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+      el.classList.add('text-gray-600');
+    });
+    document.getElementById('tab-' + tab).classList.remove('hidden');
+    event.target.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+    event.target.classList.remove('text-gray-600');
+
+    if (tab === 'users') loadUsers();
+    if (tab === 'config') loadConfig();
+    if (tab === 'stats') loadStats();
+  }
+
+  async function loadUsers() {
+    try {
+      const res = await fetch('/api/admin/users');
+      const data = await res.json();
+      const container = document.getElementById('users-list');
+
+      if (!data.users || data.users.length === 0) {
+        container.innerHTML = '<div class="text-center py-12 text-gray-500">' + _t['admin.no_users'] + '</div>';
+        return;
+      }
+
+      container.innerHTML = `
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b bg-gray-50">
+              <th class="text-left px-4 py-3 font-medium text-gray-600">${_t['admin.email']}</th>
+              <th class="text-left px-4 py-3 font-medium text-gray-600">${_t['admin.role']}</th>
+              <th class="text-left px-4 py-3 font-medium text-gray-600">${_t['admin.status']}</th>
+              <th class="text-left px-4 py-3 font-medium text-gray-600">${_t['admin.joined']}</th>
+              <th class="text-right px-4 py-3 font-medium text-gray-600">${_t['admin.actions']}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.users.map(u => `
+              <tr class="border-b hover:bg-gray-50">
+                <td class="px-4 py-3">${escapeHtml(u.email)}</td>
+                <td class="px-4 py-3 capitalize">${u.role === 'admin' ? _t['auth.role_admin'] : _t['auth.role_user']}</td>
+                <td class="px-4 py-3">
+                  <span class="${u.isActive ? 'text-green-600' : 'text-red-600'}">${u.isActive ? _t['admin.active'] : _t['admin.disabled']}</span>
+                </td>
+                <td class="px-4 py-3 text-gray-500">${new Date(u.createdAt).toLocaleDateString()}</td>
+                <td class="px-4 py-3 text-right">
+                  ${u.role !== 'admin' ? `
+                    <button onclick="toggleUser('${u.id}')" class="text-sm ${u.isActive ? 'text-yellow-600' : 'text-green-600'} hover:underline mr-2">
+                      ${u.isActive ? _t['admin.disable'] : _t['admin.enable']}
+                    </button>
+                    <button onclick="deleteUser('${u.id}')" class="text-sm text-red-600 hover:underline">${_t['admin.delete_user']}</button>
+                  ` : ''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    } catch (err) {
+      document.getElementById('users-list').innerHTML = '<div class="text-center py-12 text-red-500">' + _t['admin.load_failed'] + '</div>';
+    }
+  }
+
+  async function toggleUser(id) {
+    try {
+      const res = await fetch('/api/admin/users/' + id + '/toggle', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) loadUsers();
+      else showError(data.error);
+    } catch (err) {
+      showError('<%= t('common.failed').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>');
+    }
+  }
+
+  async function deleteUser(id) {
+    if (!confirm(_t['admin.delete_user_confirm'])) return;
+    try {
+      const res = await fetch('/api/admin/users/' + id, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) loadUsers();
+      else showError(data.error);
+    } catch (err) {
+      showError('<%= t('common.failed').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>');
+    }
+  }
+
+  async function loadConfig() {
+    try {
+      const res = await fetch('/api/admin/config');
+      const data = await res.json();
+      const c = data.config || {};
+
+      document.getElementById('config-form').innerHTML = `
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><%= t('admin.max_file_size') %></label>
+            <input type="number" id="cfg-max_file_size" value="${c.max_file_size || 1073741824}" class="w-full px-3 py-2 border rounded-lg">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><%= t('admin.share_code_length') %></label>
+            <select id="cfg-share_code_length" class="w-full px-3 py-2 border rounded-lg">
+              <option value="6" ${c.share_code_length === '6' ? 'selected' : ''}>${_t['admin.char_6']}</option>
+              <option value="8" ${c.share_code_length === '8' ? 'selected' : ''}>${_t['admin.char_8']}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><%= t('admin.share_code_expiry') %></label>
+            <input type="number" id="cfg-share_code_expiry_days" value="${c.share_code_expiry_days || 7}" class="w-full px-3 py-2 border rounded-lg">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><%= t('admin.share_code_max_downloads') %></label>
+            <input type="number" id="cfg-share_code_max_downloads" value="${c.share_code_max_downloads || 5}" class="w-full px-3 py-2 border rounded-lg">
+          </div>
+          <button onclick="saveConfig()" class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+            <%= t('admin.save_config') %>
+          </button>
+        </div>
+      `;
+    } catch (err) {
+      document.getElementById('config-form').innerHTML = '<div class="text-center py-8 text-red-500">' + _t['admin.load_failed'] + '</div>';
+    }
+  }
+
+  async function saveConfig() {
+    const config = {
+      max_file_size: document.getElementById('cfg-max_file_size').value,
+      share_code_length: document.getElementById('cfg-share_code_length').value,
+      share_code_expiry_days: document.getElementById('cfg-share_code_expiry_days').value,
+      share_code_max_downloads: document.getElementById('cfg-share_code_max_downloads').value,
+    };
+
+    try {
+      const res = await fetch('/api/admin/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      const data = await res.json();
+      if (data.success) showSuccess('<%= t('admin.config_saved').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>');
+      else showError(data.error);
+    } catch (err) {
+      showError('<%= t('common.failed').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>');
+    }
+  }
+
+  async function loadStats() {
+    try {
+      const res = await fetch('/api/admin/stats');
+      const data = await res.json();
+      const s = data.stats || {};
+
+      document.getElementById('stats-content').innerHTML = `
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+          <div class="text-2xl font-bold text-blue-700">${s.totalUsers || 0}</div>
+          <div class="text-sm text-blue-600"><%= t('admin.total_users') %></div>
+        </div>
+        <div class="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+          <div class="text-2xl font-bold text-green-700">${s.totalFiles || 0}</div>
+          <div class="text-sm text-green-600"><%= t('admin.total_files') %></div>
+        </div>
+        <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 text-center">
+          <div class="text-2xl font-bold text-purple-700">${s.totalShares || 0}</div>
+          <div class="text-sm text-purple-600"><%= t('admin.total_shares') %></div>
+        </div>
+        <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
+          <div class="text-2xl font-bold text-orange-700">${formatSize(s.totalStorageBytes || 0)}</div>
+          <div class="text-sm text-orange-600"><%= t('admin.storage_used') %></div>
+        </div>
+      `;
+    } catch (err) {
+      document.getElementById('stats-content').innerHTML = '<div class="text-center py-8 text-red-500">' + _t['admin.load_failed'] + '</div>';
+    }
+  }
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
+    return (bytes / 1073741824).toFixed(2) + ' GB';
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // Load initial tab
+  loadUsers();
+</script>
+
+<%- include('partials/footer') %>

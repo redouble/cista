@@ -1,0 +1,445 @@
+<%- include('partials/header') %>
+
+<div class="max-w-2xl mx-auto px-4 py-8" x-data="keyGenerator()">
+  <div class="bg-white rounded-xl shadow-sm border p-8">
+    <h1 class="text-2xl font-bold text-center mb-4"><%= t('key.generate_title') %></h1>
+    <p class="text-gray-600 text-center mb-8"><%= t('key.generate_desc') %></p>
+
+    <% if (typeof existingKey !== 'undefined' && existingKey) { %>
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <p class="text-blue-800 text-sm">
+          <%= t('key.replacing') %>
+        </p>
+        <p class="text-xs text-blue-600 mt-1">
+          <%= t('key.fingerprint') %>: <code class="break-all text-xs"><%= existingKey.fingerprint %></code>
+        </p>
+      </div>
+    <% } %>
+
+    <!-- Algorithm Selection: default RSA-4096, advanced toggle for more options -->
+    <div class="mb-6">
+      <div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div>
+          <span class="font-medium text-blue-800">RSA-4096</span>
+          <p class="text-xs text-blue-600"><%= t('key.rsa_4096_desc') %></p>
+        </div>
+        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium"><%= t('key.recommended') %></span>
+      </div>
+
+      <!-- Advanced toggle -->
+      <div x-data="{ showAdvanced: false }" class="mt-2">
+        <button @click="showAdvanced = !showAdvanced" type="button" class="text-xs text-gray-500 hover:text-blue-600 underline flex items-center gap-1">
+          <span x-show="!showAdvanced">▶</span>
+          <span x-show="showAdvanced">▼</span>
+          <span x-text="showAdvanced ? '<%= t('key.hide_advanced').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>' : '<%= t('key.show_advanced').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>'"></span>
+        </button>
+        <div x-show="showAdvanced" class="mt-2 p-3 border border-gray-200 rounded-lg bg-gray-50">
+          <label class="block text-xs font-medium text-gray-600 mb-2"><%= t('key.algorithm') %></label>
+          <div class="flex gap-3">
+            <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-white text-sm" :class="{'border-blue-500 bg-white': algorithm === 'rsa-4096'}">
+              <input type="radio" name="algorithm" value="rsa-4096" x-model="algorithm" class="text-blue-600">
+              <span class="font-medium">RSA-4096</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-white text-sm" :class="{'border-blue-500 bg-white': algorithm === 'ecc-x25519'}">
+              <input type="radio" name="algorithm" value="ecc-x25519" x-model="algorithm" class="text-blue-600">
+              <span class="font-medium">RSA-2048</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Generate Button -->
+    <button @click="generate()" :disabled="generating" class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed" x-text="generating ? '<%= t('key.generating').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>' : '<%= t('key.generate').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>'">
+    </button>
+
+    <!-- Progress -->
+    <div x-show="generating" class="mt-6">
+      <div class="flex justify-between text-sm mb-1">
+        <span class="text-gray-600" x-text="progressText"></span>
+        <span class="font-medium" x-text="progress + '%'"></span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-2">
+        <div class="bg-blue-600 h-2 rounded-full progress-bar" :style="'width: ' + progress + '%'"></div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div x-show="result" class="mt-6 space-y-4">
+      <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+        <p class="text-green-800 font-medium mb-2">✅ <%= t('key.generate_success') %></p>
+        <div class="bg-white rounded p-3">
+          <p class="text-xs text-gray-500 mb-1"><%= t('key.fingerprint') %>:</p>
+          <code class="text-sm font-mono break-all" x-text="result.fingerprint"></code>
+          <button @click="copyToClipboard(result.fingerprint)" class="ml-2 text-xs text-blue-600 hover:underline"><%= t('common.copy') %></button>
+        </div>
+      </div>
+
+      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <p class="text-yellow-800 text-sm font-medium mb-1">🔑 <%= t('key.browser_only') %></p>
+        <p class="text-yellow-700 text-xs"><%= t('key.browser_only_desc') %></p>
+        <button @click="exportKey()" class="text-xs text-yellow-700 hover:text-yellow-900 underline mt-2">
+          📥 <%= t('key.export_private_simple') %>
+        </button>
+        <p class="text-xs text-yellow-600 mt-1"><%= t('key.export_when') %></p>
+      </div>
+
+      <div class="text-center">
+        <a href="/dashboard" class="text-blue-600 hover:underline text-sm"><%= t('key.continue_dashboard') %></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Key Section -->
+  <div class="mt-8 bg-white rounded-xl shadow-sm border p-6" x-data="keyImporter()">
+    <h2 class="text-lg font-bold text-center mb-2">📥 <%= t('key.import_title') %></h2>
+    <p class="text-gray-500 text-xs text-center mb-4"><%= t('key.import_desc') %></p>
+
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-2"><%= t('key.import_file') %></label>
+      <input type="file" accept=".json" @change="handleFile($event)" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+    </div>
+
+    <button @click="doImport()" :disabled="!importData || importing" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 text-sm">
+      <span x-show="!importing"><%= t('key.import_action') %></span>
+      <span x-show="importing"><%= t('key.importing') %></span>
+    </button>
+
+    <div x-show="importSuccess" class="mt-4 bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+      <p class="text-green-800 text-sm font-medium">✅ <%= t('key.import_success') %></p>
+      <a href="/dashboard" class="text-blue-600 hover:underline text-xs mt-1 inline-block"><%= t('key.continue_dashboard') %></a>
+    </div>
+
+    <div x-show="importError" class="mt-4 bg-red-50 border border-red-200 rounded-lg p-3">
+      <p class="text-red-700 text-sm" x-text="importError"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  function keyGenerator() {
+    return {
+      algorithm: 'rsa-4096',
+      generating: false,
+      progress: 0,
+      progressText: 'Initializing...',
+      result: null,
+      privateKeyExported: false,
+      keyPair: null,
+
+      async generate() {
+        this.generating = true;
+        this.progress = 0;
+        this.result = null;
+        this.keyPair = null;
+
+        try {
+          // Step 1: Generate key pair
+          this.progressText = 'Generating ' + (this.algorithm === 'rsa-4096' ? 'RSA-4096' : 'RSA-2048') + ' key pair...';
+          this.progress = 10;
+
+          const keyPair = await crypto.subtle.generateKey(
+            this.algorithm === 'rsa-4096'
+              ? {
+                  name: 'RSA-OAEP',
+                  modulusLength: 4096,
+                  publicExponent: new Uint8Array([1, 0, 1]),
+                  hash: 'SHA-256',
+                }
+              : {
+                  name: 'RSA-OAEP',
+                  modulusLength: 2048,
+                  publicExponent: new Uint8Array([1, 0, 1]),
+                  hash: 'SHA-256',
+                },
+            true,
+            ['encrypt', 'decrypt']
+          );
+
+          this.keyPair = keyPair;
+          this.progress = 40;
+
+          // Step 2: Export public key
+          this.progressText = 'Exporting public key...';
+          const spki = await crypto.subtle.exportKey('spki', keyPair.publicKey);
+          this.progress = 50;
+
+          // Convert to PEM
+          const spkiB64 = arrayBufferToBase64(spki);
+          const pem = `-----BEGIN PUBLIC KEY-----\n${spkiB64.match(/.{1,64}/g)?.join('\n')}\n-----END PUBLIC KEY-----`;
+          this.progress = 60;
+
+          // Step 3: Compute fingerprint
+          this.progressText = 'Computing fingerprint...';
+          const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pem));
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+          const fingerprint = hashHex.match(/.{1,4}/g)?.join(':') || hashHex;
+          this.progress = 70;
+
+          // Step 4: Encrypt private key with password-derived key
+          this.progressText = 'Encrypting private key for storage...';
+          const password = await getPassword();
+          if (!password) {
+            this.generating = false;
+            return;
+          }
+
+          const salt = crypto.getRandomValues(new Uint8Array(16));
+          const pbkdfKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+          const aesKey = await crypto.subtle.deriveKey(
+            { name: 'PBKDF2', salt, iterations: 600000, hash: 'SHA-256' },
+            pbkdfKey,
+            { name: 'AES-GCM', length: 256 },
+            false,
+            ['encrypt']
+          );
+
+          const privateKeyRaw = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
+          const iv = crypto.getRandomValues(new Uint8Array(12));
+          const encryptedPrivateKey = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aesKey, privateKeyRaw);
+          this.progress = 80;
+
+          // Step 5: Store in IndexedDB
+          this.progressText = 'Storing encrypted private key...';
+
+          // Concatenate salt + iv + encrypted data
+          const encKeyLen = new Uint8Array(encryptedPrivateKey).length;
+          const combined = new Uint8Array(salt.length + iv.length + encKeyLen);
+          combined.set(salt);
+          combined.set(iv, salt.length);
+          combined.set(new Uint8Array(encryptedPrivateKey), salt.length + iv.length);
+
+          storeInIndexedDB(this.algorithm, combined);
+          this.progress = 85;
+
+          // Step 6: Upload public key to server
+          this.progressText = 'Uploading public key to server...';
+          const uploadRes = await fetch('/api/keys/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ publicKey: pem, algorithm: this.algorithm }),
+          });
+
+          if (!uploadRes.ok) throw new Error('Failed to upload public key');
+          this.progress = 100;
+
+          this.result = { fingerprint, algorithm: this.algorithm };
+        } catch (err) {
+          console.error('Key generation failed:', err);
+          showError('Key generation failed: ' + err.message);
+        } finally {
+          this.generating = false;
+        }
+      },
+
+      async exportKey() {
+        if (!this.keyPair) return;
+        try {
+          const password = await getPassword();
+          if (!password) return;
+
+          const salt = crypto.getRandomValues(new Uint8Array(16));
+          const pbkdfKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+          const aesKey = await crypto.subtle.deriveKey(
+            { name: 'PBKDF2', salt, iterations: 600000, hash: 'SHA-256' },
+            pbkdfKey,
+            { name: 'AES-GCM', length: 256 },
+            false,
+            ['encrypt']
+          );
+
+          const privateKeyRaw = await crypto.subtle.exportKey('pkcs8', this.keyPair.privateKey);
+          const publicKeyRaw = await crypto.subtle.exportKey('spki', this.keyPair.publicKey);
+          const iv = crypto.getRandomValues(new Uint8Array(12));
+          const encryptedPrivateKey = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aesKey, privateKeyRaw);
+
+          const encKeyLen = new Uint8Array(encryptedPrivateKey).length;
+          const combined = new Uint8Array(salt.length + iv.length + encKeyLen);
+          combined.set(salt);
+          combined.set(iv, salt.length);
+          combined.set(new Uint8Array(encryptedPrivateKey), salt.length + iv.length);
+
+          // Create export object
+          const exportObj = {
+            version: 1,
+            algorithm: this.algorithm,
+            encryptedPrivateKey: arrayBufferToBase64(combined.buffer),
+            publicKey: await exportPublicKeyPem(this.keyPair.publicKey),
+            createdAt: new Date().toISOString(),
+          };
+
+          const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `cista-private-key-backup-${new Date().toISOString().slice(0, 10)}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        } catch (err) {
+          console.error('Export failed:', err);
+          showError('Export failed: ' + err.message);
+        }
+      },
+
+      copyToClipboard(text) {
+        navigator.clipboard.writeText(text);
+      }
+    }
+  }
+
+  function keyImporter() {
+    return {
+      importData: null,
+      importing: false,
+      importSuccess: false,
+      importError: '',
+
+      handleFile(event) {
+        const file = event.target.files[0];
+        if (!file) { this.importData = null; return; }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const obj = JSON.parse(e.target.result);
+            if (!obj.encryptedPrivateKey || !obj.publicKey || !obj.algorithm) {
+              this.importError = '<%= t('key.import_invalid').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>';
+              this.importData = null;
+              return;
+            }
+            this.importData = obj;
+            this.importError = '';
+          } catch (err) {
+            this.importError = '<%= t('key.import_invalid').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>';
+            this.importData = null;
+          }
+        };
+        reader.readAsText(file);
+      },
+
+      async doImport() {
+        if (!this.importData) return;
+        this.importing = true;
+        this.importError = '';
+        this.importSuccess = false;
+
+        try {
+          // Decrypt the private key using user's password
+          const password = prompt('<%= t('key.import_password_prompt').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>');
+          if (!password) { this.importing = false; return; }
+
+          const combined = base64ToArrayBuffer(this.importData.encryptedPrivateKey);
+          const combinedBytes = new Uint8Array(combined);
+
+          // Extract salt (16), iv (12), and ciphertext
+          const salt = combinedBytes.slice(0, 16);
+          const iv = combinedBytes.slice(16, 28);
+          const ciphertext = combinedBytes.slice(28);
+
+          const pbkdfKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+          const aesKey = await crypto.subtle.deriveKey(
+            { name: 'PBKDF2', salt, iterations: 600000, hash: 'SHA-256' },
+            pbkdfKey,
+            { name: 'AES-GCM', length: 256 },
+            false,
+            ['decrypt']
+          );
+
+          const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, aesKey, ciphertext);
+
+          // Re-encrypt with same password and store in IndexedDB
+          const newSalt = crypto.getRandomValues(new Uint8Array(16));
+          const newIv = crypto.getRandomValues(new Uint8Array(12));
+          const newPbkdfKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+          const newAesKey = await crypto.subtle.deriveKey(
+            { name: 'PBKDF2', salt: newSalt, iterations: 600000, hash: 'SHA-256' },
+            newPbkdfKey,
+            { name: 'AES-GCM', length: 256 },
+            false,
+            ['encrypt']
+          );
+          const reEncrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: newIv }, newAesKey, decrypted);
+
+          const encKeyLen = new Uint8Array(reEncrypted).length;
+          const combinedNew = new Uint8Array(newSalt.length + newIv.length + encKeyLen);
+          combinedNew.set(newSalt);
+          combinedNew.set(newIv, newSalt.length);
+          combinedNew.set(new Uint8Array(reEncrypted), newSalt.length + newIv.length);
+
+          // Store in IndexedDB
+          await storeInIndexedDB(this.importData.algorithm, combinedNew);
+
+          // Upload public key to server if not already there
+          const myKeyRes = await fetch('/api/keys/mine');
+          if (myKeyRes.status === 404) {
+            await fetch('/api/keys/upload', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ publicKey: this.importData.publicKey, algorithm: this.importData.algorithm }),
+            });
+          }
+
+          this.importSuccess = true;
+        } catch (err) {
+          console.error('Import failed:', err);
+          this.importError = '<%= t('key.import_failed').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>';
+        } finally {
+          this.importing = false;
+        }
+      }
+    }
+  }
+
+  function base64ToArrayBuffer(base64) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }
+
+  async function exportPublicKeyPem(publicKey) {
+    const spki = await crypto.subtle.exportKey('spki', publicKey);
+    const b64 = arrayBufferToBase64(spki);
+    return `-----BEGIN PUBLIC KEY-----\n${b64.match(/.{1,64}/g)?.join('\n')}\n-----END PUBLIC KEY-----`;
+  }
+
+  async function getPassword() {
+    const password = prompt('Enter your account password to encrypt your private key:');
+    if (!password) return null;
+    return password;
+  }
+
+  async function storeInIndexedDB(algorithm, encryptedData) {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('cista-keys', 1);
+      request.onupgradeneeded = (evt) => {
+        const db = evt.target.result;
+        if (!db.objectStoreNames.contains('keys')) {
+          db.createObjectStore('keys', { keyPath: 'id' });
+        }
+      };
+      request.onsuccess = (evt) => {
+        const db = evt.target.result;
+        const tx = db.transaction('keys', 'readwrite');
+        const store = tx.objectStore('keys');
+        store.put({ id: 'private-key', algorithm, encryptedData: Array.from(new Uint8Array(encryptedData)), createdAt: new Date().toISOString() });
+        tx.oncomplete = () => { db.close(); resolve(); };
+        tx.onerror = reject;
+      };
+      request.onerror = reject;
+    });
+  }
+</script>
+
+<%- include('partials/footer') %>

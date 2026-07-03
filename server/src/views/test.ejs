@@ -1,0 +1,59 @@
+<%- include('partials/header') %>
+
+<div class="max-w-2xl mx-auto px-4 py-8">
+  <div class="bg-white rounded-xl shadow-sm border p-8">
+    <h1 class="text-2xl font-bold text-center mb-6">密钥生成调试</h1>
+    <div id="output" class="space-y-2 font-mono text-sm"></div>
+    <div class="flex gap-4 mt-6">
+      <button onclick="testRSA4096()" class="bg-blue-600 text-white px-4 py-2 rounded">测试 RSA-4096</button>
+      <button onclick="testRSA2048()" class="bg-green-600 text-white px-4 py-2 rounded">测试 RSA-2048</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const out = document.getElementById('output');
+
+  function log(msg, ok) {
+    const div = document.createElement('div');
+    div.className = ok === false ? 'text-red-600' : ok === true ? 'text-green-600' : 'text-gray-600';
+    div.textContent = (ok === true ? '✅ ' : ok === false ? '❌ ' : '→ ') + msg;
+    out.appendChild(div);
+  }
+
+  async function testRSA4096() { await testKeyGen(4096); }
+  async function testRSA2048() { await testKeyGen(2048); }
+
+  async function testKeyGen(size) {
+    out.innerHTML = '';
+    log(`测试 RSA-${size} 密钥生成...`);
+    try {
+      log('Step 1: crypto.subtle.generateKey...');
+      const keyPair = await crypto.subtle.generateKey(
+        { name: 'RSA-OAEP', modulusLength: size, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' },
+        true,
+        ['encrypt', 'decrypt']
+      );
+      log('generateKey 成功', true);
+
+      log('Step 2: exportKey(spki)...');
+      const spki = await crypto.subtle.exportKey('spki', keyPair.publicKey);
+      log('exportKey public 成功', true);
+
+      log('Step 3: exportKey(pkcs8)...');
+      const pkcs8 = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
+      log('exportKey private 成功', true);
+
+      log('Step 4: digest(SHA-256)...');
+      const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('test'));
+      log('digest 成功', true);
+
+      log('全部步骤通过！', true);
+    } catch (err) {
+      log(`失败: ${err.name}: ${err.message}`, false);
+      console.error('Test failed:', err);
+    }
+  }
+</script>
+
+<%- include('partials/footer') %>

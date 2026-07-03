@@ -1,0 +1,198 @@
+<%- include('partials/header') %>
+
+<div class="max-w-md mx-auto px-4 py-16" x-data="shareRedeemer()">
+  <div class="bg-white rounded-xl shadow-sm border p-8">
+    <h1 class="text-2xl font-bold text-center mb-2"><%= t('share.download') %></h1>
+    <p class="text-gray-500 text-center text-sm mb-8"><%= t('share.enter_code') %></p>
+
+    <div id="error-message" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm"></div>
+
+    <form @submit.prevent="redeem()" class="space-y-4">
+      <div>
+        <input type="text" x-model="code" maxlength="8" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-center text-2xl font-mono font-bold tracking-widest uppercase focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="ABCDEF12">
+      </div>
+      <button type="submit" :disabled="loading || code.length < 4" class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50">
+        <span x-show="!loading"><%= t('share.download') %></span>
+        <span x-show="loading"><%= t('file.decrypting') %></span>
+      </button>
+    </form>
+
+    <!-- Progress -->
+    <div x-show="loading" class="mt-4">
+      <div class="w-full bg-gray-200 rounded-full h-3">
+        <div class="bg-blue-600 h-3 rounded-full progress-bar" :style="'width: ' + progress + '%'"></div>
+      </div>
+      <p class="text-sm text-gray-500 mt-1 text-center" x-text="statusText"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  function shareRedeemer() {
+    return {
+      code: '',
+      loading: false,
+      progress: 0,
+      statusText: '',
+
+      async redeem() {
+        this.loading = true;
+        this.progress = 0;
+        this.statusText = 'Verifying share code...';
+
+        try {
+          // Step 1: Redeem the code
+          const res = await fetch('/api/shares/redeem', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: this.code.toUpperCase() }),
+          });
+
+          const data = await res.json();
+          if (!data.success) {
+            showError(data.error);
+            this.loading = false;
+            return;
+          }
+
+          this.progress = 20;
+          this.statusText = 'Decrypting file key...';
+
+          const file = data.file;
+
+          let dek;
+
+          if (file.shareType === 'unregistered' && file.tempPrivateKeyEncrypted) {
+            // Unregistered share: decrypt with temp private key
+            this.progress = 30;
+            this.statusText = 'Decrypting with temporary key...';
+
+            const tempPrivateKeyRaw = base64ToArrayBuffer(file.tempPrivateKeyEncrypted);
+            const tempPrivateKey = await crypto.subtle.importKey(
+              'pkcs8', tempPrivateKeyRaw,
+              { name: 'RSA-OAEP', hash: 'SHA-256' },
+              false, ['decrypt']
+            );
+
+            this.progress = 40;
+            this.statusText = 'Decrypting data key...';
+
+            const encryptedKey = base64ToArrayBuffer(file.encryptedKey);
+            dek = await crypto.subtle.decrypt({ name: 'RSA-OAEP' }, tempPrivateKey, encryptedKey);
+          } else {
+            // Registered share: decrypt with user's own private key
+            this.progress = 30;
+            this.statusText = 'Retrieving private key...';
+
+            const privateKey = await getPrivateKey();
+            if (!privateKey) {
+              showError('<%= t('key.import_prompt_download').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>');
+              this.loading = false;
+              return;
+            }
+
+            this.progress = 40;
+            this.statusText = 'Decrypting data key...';
+
+            const encryptedKey = base64ToArrayBuffer(file.encryptedKey);
+            dek = await crypto.subtle.decrypt({ name: 'RSA-OAEP' }, privateKey, encryptedKey);
+          }
+
+          this.progress = 60;
+          this.statusText = 'Decrypting file...';
+
+          // Step: Import DEK and decrypt file
+          const aesKey = await crypto.subtle.importKey('raw', dek, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+          const encryptedData = new Uint8Array(base64ToArrayBuffer(file.encryptedData));
+          const iv = encryptedData.slice(0, 12);
+          const ciphertext = encryptedData.slice(12);
+
+          const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, aesKey, ciphertext);
+
+          this.progress = 90;
+          this.statusText = '<%= t('file.decrypt_complete').replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>';
+
+          // Step 5: Save file
+          const blob = new Blob([decrypted], { type: file.mimeType || 'application/octet-stream' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = file.name;
+          a.click();
+          URL.revokeObjectURL(url);
+
+          this.progress = 100;
+          this.statusText = 'Download complete!';
+        } catch (err) {
+          console.error('Redeem failed:', err);
+          showError('Failed to download: ' + err.message);
+        } finally {
+          setTimeout(() => { this.loading = false; }, 1000);
+        }
+      }
+    }
+  }
+
+  function base64ToArrayBuffer(base64) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  async function getPrivateKey() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('cista-keys', 1);
+      request.onsuccess = (evt) => {
+        const db = evt.target.result;
+        const tx = db.transaction('keys', 'readonly');
+        const store = tx.objectStore('keys');
+        const getReq = store.get('private-key');
+        getReq.onsuccess = async () => {
+          if (!getReq.result) { resolve(null); return; }
+
+          const stored = getReq.result;
+          const encryptedData = new Uint8Array(stored.encryptedData);
+          const salt = encryptedData.slice(0, 16);
+          const iv = encryptedData.slice(16, 28);
+          const ciphertext = encryptedData.slice(28);
+
+          try {
+            const password = prompt('Enter your password to decrypt your private key:');
+            if (!password) { resolve(null); return; }
+
+            const pbkdfKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+            const aesKey = await crypto.subtle.deriveKey(
+              { name: 'PBKDF2', salt, iterations: 600000, hash: 'SHA-256' },
+              pbkdfKey,
+              { name: 'AES-GCM', length: 256 },
+              false,
+              ['decrypt']
+            );
+
+            const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, aesKey, ciphertext);
+
+            const privateKey = await crypto.subtle.importKey(
+              'pkcs8',
+              decrypted,
+              { name: 'RSA-OAEP', hash: 'SHA-256' },
+              false,
+              ['decrypt']
+            );
+
+            resolve(privateKey);
+          } catch (err) {
+            showError('Failed to decrypt private key. Wrong password?');
+            resolve(null);
+          }
+        };
+        getReq.onerror = reject;
+      };
+      request.onerror = reject;
+    });
+  }
+</script>
+
+<%- include('partials/footer') %>
