@@ -292,6 +292,18 @@ If you find this project helpful, please consider sponsoring its development.
 
 ---
 
+## ⭐ Star History
+
+<a href="https://www.star-history.com/#redouble/cista&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=redouble/cista&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=redouble/cista&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=redouble/cista&type=Date" />
+ </picture>
+</a>
+
+---
+
 ## ⚠️ Disclaimer
 
 This software is provided for educational and lawful purposes only. The authors assume no liability for any misuse or damages. Always conduct your own security audit before deploying to production.
