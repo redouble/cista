@@ -223,7 +223,7 @@ cista/
 | **Zero-knowledge**                | ✅                          | ✅                    | ✅               | ✅              |
 | **Admin panel**                   | ✅ User & system management | ❌                    | ❌               | ❌              |
 | **i18n**                          | ✅ Chinese & English        | ❌ English only       | ❌ English only  | ❌ English only |
-| **License**                       | Apache 2.0                  | —                     | AGPL v3          | GPL v3          |
+| **License**                       | BSL 1.1 (4yr → Apache 2.0) | —                     | AGPL v3          | GPL v3          |
 
 ---
 
@@ -247,7 +247,15 @@ npm run dev
 
 ## 📄 License
 
-Apache License 2.0. See [LICENSE](LICENSE) for details.
+**Business Source License 1.1**
+
+**Additional Use Grant:** You may use the Licensed Work in development, testing, and personal non-production environments. For production deployments, please contact the author for commercial licensing.
+
+**Change Date:** 4 years from the release date of each version.
+
+**Change License:** Apache License 2.0
+
+See the [LICENSE](LICENSE) file for the full license text.
 
 ---
 
