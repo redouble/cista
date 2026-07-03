@@ -12,12 +12,12 @@ Cista is an open-source, self-hosted web application for secure end-to-end encry
 
 ### 🔑 One-Click Key Generation
 
-Generate RSA-4096 or ECC X25519 key pairs directly in your browser using the Web Crypto API. **No command line, no technical knowledge required.** Your private key never leaves your device.
+Generate RSA-4096 or RSA-2048 key pairs directly in your browser using the Web Crypto API. **No command line, no technical knowledge required.** Your private key never leaves your device.
 
 ### 🔒 End-to-End Encryption
 
 - **AES-256-GCM** encrypts each file with a unique random key (DEK)
-- **RSA-4096 or ECC X25519** encrypts the DEK with the recipient's public key
+- **RSA-4096 or RSA-2048** encrypts the DEK with the recipient's public key
 - Files are encrypted in the browser **before upload** — server stores only ciphertext
 - Decryption happens in the browser **after download**
 
@@ -142,7 +142,7 @@ cista/
 ### Database Schema
 
 - **users** — User accounts with password hashes and roles
-- **user_keys** — RSA/ECC public keys with fingerprints
+- **user_keys** — RSA public keys with fingerprints
 - **files** — Encrypted file metadata and storage paths
 - **share_codes** — Share codes with encrypted DEKs and access controls
 - **password_reset_tokens** — Time-limited password reset tokens
@@ -190,8 +190,8 @@ cista/
 | Purpose          | Algorithm                        |
 | ---------------- | -------------------------------- |
 | File encryption  | AES-256-GCM (random IV per file) |
-| Key encryption   | RSA-OAEP (SHA-256) / ECDH        |
-| Key generation   | RSA-4096 / ECC X25519            |
+| Key encryption   | RSA-OAEP (SHA-256)                |
+| Key generation   | RSA-4096 / RSA-2048                |
 | Key derivation   | PBKDF2 (600,000 iterations)      |
 | Password hashing | bcrypt (cost 10)                 |
 
@@ -216,7 +216,7 @@ cista/
 | **File management dashboard**     | ✅ Full CRUD                | ✅                    | ❌               | ❌              |
 | **Share code management**         | ✅ Revoke, expiry, limits   | ❌                    | Limited          | Limited         |
 | **Self-hosted**                   | ✅ Open source              | ✅                    | ✅               | ✅              |
-| **E2E encryption**                | ✅ AES-256-GCM + RSA/ECC    | ✅ AES-256 + RSA-4096 | ✅ Browser-based | ✅ OpenPGP      |
+| **E2E encryption**                | ✅ AES-256-GCM + RSA        | ✅ AES-256 + RSA-4096 | ✅ Browser-based | ✅ OpenPGP      |
 | **Zero-knowledge**                | ✅                          | ✅                    | ✅               | ✅              |
 | **Admin panel**                   | ✅ User & system management | ❌                    | ❌               | ❌              |
 | **i18n**                          | ✅ Chinese & English        | ❌ English only       | ❌ English only  | ❌ English only |
