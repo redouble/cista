@@ -1,0 +1,5 @@
+# GitHub language detection override
+# The project is primarily TypeScript; EJS templates are HTML-based
+*.ejs linguist-language=HTML linguist-vendored
+*.json linguist-vendored
+package-lock.json linguist-generated
