@@ -259,6 +259,38 @@ npm run dev
 
 ---
 
+## ☕ 赞助
+
+如果你觉得这个项目有帮助，欢迎赞助支持持续开发。
+
+### 微信赞赏 (WeChat Pay)
+
+<img src="docs/wechat-qr.png" width="200" alt="微信赞赏码" />
+
+### 支付宝 (Alipay)
+
+<img src="docs/alipay-qr.png" width="200" alt="支付宝收款码" />
+
+### PayPal
+
+<p>
+  <a href="https://paypal.me/YOUR_PAYPAL" target="_blank">
+    <img src="https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white" alt="PayPal" />
+  </a>
+</p>
+
+### GitHub Sponsors
+
+<p>
+  <a href="https://github.com/sponsors/redouble" target="_blank">
+    <img src="https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#white" alt="GitHub Sponsors" />
+  </a>
+</p>
+
+**感谢所有支持者！** 🙏
+
+---
+
 ## ⚠️ 安全免责声明
 
 **重要：使用前请仔细阅读**

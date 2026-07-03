@@ -251,6 +251,46 @@ Apache License 2.0. See [LICENSE](LICENSE) for details.
 
 ---
 
+## ☕ 赞助 / Sponsor
+
+如果你觉得这个项目有帮助，欢迎赞助支持持续开发。
+
+If you find this project helpful, please consider sponsoring its development.
+
+### 微信赞赏 (WeChat Pay)
+
+<img src="docs/wechat-qr.png" width="200" alt="微信赞赏码" />
+<!--- 请将你的微信收款二维码放在 docs/wechat-qr.png --->
+
+### 支付宝 (Alipay)
+
+<img src="docs/alipay-qr.png" width="200" alt="支付宝收款码" />
+<!--- 请将你的支付宝收款二维码放在 docs/alipay-qr.png --->
+
+### PayPal
+
+<p>
+  <a href="https://paypal.me/redouble" target="_blank">
+    <img src="https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white" alt="PayPal" />
+  </a>
+</p>
+<!--- 将 paypal.me/ 后面的链接改为你的 PayPal 用户名 --->
+
+### GitHub Sponsors
+
+<p>
+  <a href="https://github.com/sponsors/redouble" target="_blank">
+    <img src="https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#white" alt="GitHub Sponsors" />
+  </a>
+</p>
+<!--- 需要在 GitHub 上开通 Sponsors 后此链接才生效 --->
+
+**感谢所有支持者！** 每一份捐赠都会用于项目的持续开发和维护。
+
+**Thank you to all supporters!** Every donation helps with ongoing development and maintenance.
+
+---
+
 ## ⚠️ Disclaimer
 
 This software is provided for educational and lawful purposes only. The authors assume no liability for any misuse or damages. Always conduct your own security audit before deploying to production.

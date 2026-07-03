@@ -264,6 +264,38 @@ See the [LICENSE](LICENSE) file for the full license text.
 
 ---
 
+## ☕ Sponsor
+
+If you find this project helpful, please consider sponsoring its development.
+
+### WeChat Pay
+
+<img src="docs/wechat-qr.png" width="200" alt="WeChat Pay QR Code" />
+
+### Alipay
+
+<img src="docs/alipay-qr.png" width="200" alt="Alipay QR Code" />
+
+### PayPal
+
+<p>
+  <a href="https://paypal.me/YOUR_PAYPAL" target="_blank">
+    <img src="https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white" alt="PayPal" />
+  </a>
+</p>
+
+### GitHub Sponsors
+
+<p>
+  <a href="https://github.com/sponsors/redouble" target="_blank">
+    <img src="https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#white" alt="GitHub Sponsors" />
+  </a>
+</p>
+
+**Thank you to all supporters!** 🙏
+
+---
+
 ## ⚠️ Security Disclaimer
 
 **Important: Please read carefully before use**
