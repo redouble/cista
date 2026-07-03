@@ -6,6 +6,8 @@
 
 > **无需终端，无需 OpenSSL，无需技术知识。会用网站就会用密匣。**
 
+[![CI](https://github.com/redouble/cista/actions/workflows/test.yml/badge.svg)](https://github.com/redouble/cista/actions/workflows/test.yml)
+
 > **许可证：** Business Source License 1.1 — 详见下方 [📄 许可证](#-许可证) 章节。
 
 ---

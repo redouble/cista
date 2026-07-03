@@ -8,6 +8,8 @@ Cista is an open-source, self-hosted web application for secure end-to-end encry
 
 > **No terminal, no OpenSSL, no technical skills required. If you can use a website, you can use Cista.**
 
+[![CI](https://github.com/redouble/cista/actions/workflows/test.yml/badge.svg)](https://github.com/redouble/cista/actions/workflows/test.yml)
+
 - [English](README.en.md)
 - [中文](README.zh.md)
 
