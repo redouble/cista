@@ -40,14 +40,17 @@
         <div>
           <code class="font-mono font-bold text-lg"><%= sc.code %></code>
           <p class="text-xs text-gray-500">
-            <%= sc.shareType === 'registered' ? t('share.registered') : t('share.unregistered') %> ·
-            <%= sc.downloadCount %>/<%= sc.maxDownloads %> downloads
-            <% if (sc.expiresAt) { %> · Expires: <%= new Date(sc.expiresAt).toLocaleDateString() %><% } %>
+          <p class="text-xs text-gray-500">
+            <%= sc.share_type === 'registered' ? t('share.registered') : t('share.unregistered') %> ·
+            <%= sc.download_count %>/<%= sc.max_downloads %> <%= t('share.downloads_count') %>
+            <% if (sc.expires_at) { %> · <%= t('share.expires') %>: <%= new Date(sc.expires_at).toLocaleDateString() %><% } %>
           </p>
         </div>
         <div class="flex gap-2">
-          <button onclick="copyToClipboard('<%= sc.code %>')" class="text-blue-600 text-sm hover:underline">Copy</button>
-          <% if (sc.isActive) { %>
+          <button onclick="copyToClipboard('<%= sc.code %>')" class="text-blue-600 text-sm hover:underline"><%= t('common.copy') %></button>
+          <% if (sc.is_active) { %>
+          <button onclick="revokeShare('<%= sc.id %>')" class="text-red-600 text-sm hover:underline"><%= t('share.revoke') %></button>
+          <% } else { %>
           <button onclick="revokeShare('<%= sc.id %>')" class="text-red-600 text-sm hover:underline"><%= t('share.revoke') %></button>
           <% } else { %>
           <span class="text-gray-400 text-sm">Revoked</span>

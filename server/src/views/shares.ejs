@@ -28,12 +28,12 @@
       container.innerHTML = data.codes.map(c => `
         <div class="bg-white border rounded-xl p-4 flex items-center justify-between hover:shadow-sm transition">
           <div>
-            <code class="font-mono font-bold text-lg ${c.isActive ? 'text-green-700' : 'text-gray-400'}">${c.code}</code>
+            <code class="font-mono font-bold text-lg ${c.is_active ? 'text-green-700' : 'text-gray-400'}">${c.code}</code>
             <p class="text-xs text-gray-500">
-              ${c.fileName || '<%= t('share.unknown_file') %>'} ·
-              ${c.shareType === 'registered' ? '<%= t("share.registered") %>' : '<%= t("share.unregistered") %>'} ·
-              ${c.downloadCount}/${c.maxDownloads} <%= t('share.downloads_count') %>
-              ${c.expiresAt ? ' · <%= t('share.expires') %>: ' + new Date(c.expiresAt).toLocaleDateString() : ''}
+              ${c.file_name || '<%= t('share.unknown_file') %>'} ·
+              ${c.share_type === 'registered' ? '<%= t("share.registered") %>' : '<%= t("share.unregistered") %>'} ·
+              ${c.download_count}/${c.max_downloads} <%= t('share.downloads_count') %>
+              ${c.expires_at ? ' · <%= t('share.expires') %>: ' + new Date(c.expires_at).toLocaleDateString() : ''}
             </p>
           </div>
           <div class="flex gap-2">
